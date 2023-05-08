@@ -1,33 +1,56 @@
-# Gradle files
-.gradle/
-build/
+*~
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin
+gen
 
 # Local configuration file (sdk path, etc)
 local.properties
 
-# Log/OS Files
-*.log
+# Windows thumbnail db
+Thumbs.db
 
-# Android Studio generated files and folders
-captures/
-.externalNativeBuild/
-.cxx/
-*.apk
-output.json
+# OSX files
+.DS_Store
 
-# IntelliJ
+# Eclipse project files
+.classpath
+.project
+
+# Android Studio
+.idea
+.gradle
+build
 *.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+GitLabCICD/outputs
 
-# Keystore files
-*.jks
-*.keystore
+# fastlane specific
+fastlane/report.xml
 
-# Google Services (e.g. APIs or Firebase)
-google-services.json
+# deliver temporary files
+fastlane/Preview.html
 
-# Android Profiling
-*.hprof
+# snapshot generated screenshots
+fastlane/screenshots
+
+# scan temporary files
+fastlane/test_output
+
+virtualenv
+
+# Key files
+signing.properties
+play_store_key.json
+
+# Node.JS Ignores
+node_modules
+rsakey.pem
+
+# WhiteSource scan files
+*scan_report.json
