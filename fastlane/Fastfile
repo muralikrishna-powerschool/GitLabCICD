@@ -1,0 +1,296 @@
+# Customise this file, documentation can be found here:
+# https://github.com/fastlane/fastlane/tree/master/fastlane/docs
+# All available actions: https://docs.fastlane.tools/actions
+# can also be listed using the `fastlane actions` command
+
+# Change the syntax highlighting to Ruby
+# All lines starting with a # are ignored when running `fastlane`
+
+# If you want to automatically update fastlane if a new version is available:
+# update_fastlane
+
+# This is the minimum version number required.
+# Update this, if you use features of a newer version
+require 'java-properties'
+
+default_platform :android
+
+$chdirToProjRootCmd = "cd .."
+$gradleFile = "GitLabCICD/build.gradle"
+
+platform :android do
+  before_all do
+  end
+
+  desc "Runs all the local Unit Tests"
+  lane :test do
+    gradle(task: "clean")
+  end
+
+  desc "Generate release APKs and aab"
+  lane :generateReleaseBuilds do
+    sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/buildRelease.sh"
+  end
+
+  desc "Publishes apk to Google Play Store's Internal Track"
+  lane :publishPlayStore do
+    _playVersions = google_play_track_version_codes(
+      track: "internal", # use the interal track until we're happy with our release automation
+    )
+
+    _playStoreAabsThatContainLocalVersionCode = _playVersions.select do |version|
+      version.to_s.include?(versionCode)
+    end
+
+    if _playStoreAabsThatContainLocalVersionCode.size == 0
+      # NOTE: This lane expects APKs to have been generated via the :generateReleaseBuilds lane
+      # and to be run from the project root
+      path_to_aab = ""
+      path_to_mapping = ""
+      Dir.chdir("../") do
+        path_to_aab = "./Release/schoologyApp-release.aab"
+        path_to_mapping = "./Release/mapping.txt"
+      end
+
+      # Update release notes
+      sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/release/update_notes_for_play_store.rb -n #{getCurrentVersionName} -c #{versionCode}"
+
+      supply(
+        track: "internal", # use the interal track until we're happy with our release automation
+        aab: path_to_aab,
+        mapping: path_to_mapping,
+        skip_upload_images: true,
+        skip_upload_screenshots: true,
+        skip_upload_apk: true
+        # Uncomment to debug this lane. Setting "validate_only" to true ensures that the aab does not get
+        # published to the Play Store.
+        # validate_only: true
+      )
+
+      # ENV("SLACK_URL") must exist
+      slack(
+        message: "Android build #{getCurrentVersionName} is published to Google Play Store's Internal Test Track! Go to the Google Play Console to promote to Beta/Production.",
+        default_payloads: [:test_result, :git_branch]
+      )
+    else
+      UI.success "Builds #{_playStoreAabsThatContainLocalVersionCode} already exist for version #{versionCode} in Play Store. Skipping publish."
+    end
+  end
+
+  desc "Publishes release build internally for Smoke test"
+  lane :appCenterInternal do
+    appcenter_upload(
+        api_token: ENV['APP_CENTER_APP_TOKEN'],
+        owner_name: app_center_owner_name,
+        app_name: app_center_beta_app_name,
+        apk: "Release/schoologyApp-release.apk",
+        mapping: "Release/mapping.txt",
+        release_notes: ENV['APP_RELEASE_NOTES'],
+        notify_testers: true
+    )
+  end
+
+  desc "Publishes Production builds to enterprise app center"
+  lane :appCenterEnterprise do
+    versionName = getCurrentVersionName
+    #this lane expects release notes to be present in the location below
+    release_notes_en = IO.read("../release_notes/#{versionName}/release_notes_en.txt")
+    release_notes_es = IO.read("../release_notes/#{versionName}/release_notes_es.txt")
+
+    println(message: "Uploading file universal apk")
+
+    appcenter_upload(
+        api_token: ENV['APP_CENTER_ENTERPRISE_API_TOKEN'],
+        owner_name: app_center_owner_name,
+        app_name: app_center_enterprise_app_name,
+        apk: "Release/GitLabCICD-release.apk",
+        mapping: "Release/mapping.txt",
+        version: versionName,
+        build_number: versionCode,
+        destinations: app_center_enterprise_destination_group,
+        destination_type: "group",
+        release_notes: "#{versionName}\n\nEnglish:\n\n#{release_notes_en}\n\nEspañol:\n\n#{release_notes_es}",
+        notify_testers: false
+    )
+
+  end
+
+  desc "Create Release Candidate build"
+  lane :buildRC do
+
+    # Create Temp Files for build outputs
+    rawBuildOutput = "tempBuildOutput.XXX"
+    tempWarningFile = "tempWarnings.XXX"
+    sh "#{$chdirToProjRootCmd} && mktemp -t #{tempWarningFile} && mktemp -t #{rawBuildOutput}"
+
+    # Run the Build while piping the output into a file to be parsed out later
+    # sh in Linux does not support "set -o pipefail" which is why we need to call the command from a bash shell
+    sh "bash -c 'set -o pipefail && #{$chdirToProjRootCmd} && bundle exec fastlane android internalBuildRC | tee #{rawBuildOutput}'"
+
+    # Extract the warnings from the build output
+    # sh in Linux does not support "set -o pipefail" which is why we need to call the command from a bash shell
+    sh "bash -c 'set -o pipefail && #{$chdirToProjRootCmd} && cat #{rawBuildOutput} | bundle exec #{$scriptsDir}/extract_build_warnings.rb >> #{tempWarningFile}'"
+
+    # Process the extracted warnings
+    sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_build_output.sh -l #{tempWarningFile}"
+
+    # Remove the temporary files
+    sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput} #{tempWarningFile}"
+  end
+
+  lane :internalBuildRC do
+  	newVersionName = "#{getCurrentVersionName}_#{branchName}_#{versionCode}"
+  	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
+    gradle(task: "clean")
+    gradle(task: "assembleRC")
+  end
+
+  desc "Process lint warnings"
+  lane :lintRC do
+    println(message: "Schoology Log Lint Started")
+    gradle(task: "clean")
+    gradle(task: ":schoologyApp:lintRc")
+    sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_lint_output.sh"
+    println(message: "Schoology Log Lint Succeded")
+  end
+
+  desc "Deploy to app center"
+  lane :appCenter do
+
+    appcenter_upload(
+        api_token: ENV['APP_CENTER_APP_TOKEN'],
+        owner_name: app_center_owner_name,
+        app_name: app_center_beta_app_name,
+        apk: ENV['APK_FILE_PATH'],
+        # mapping: ENV['MAPPING_FILE_PATH'],  # Mappings Disabled, since RC build does not go through proguard yet and doesn't generate one
+        release_notes: ENV['APP_RELEASE_NOTES'],
+        notify_testers: true
+    )
+  end
+
+  def runUITests(package_name)
+    gradle(task: "GitLabCICD:uninstallAll")
+    println(message: "GitLabCICD Log runUITests uninstallAll succesfull")
+    gradle(task: "clean")
+    println(message: "GitLabCICD Log runUITests clean succesfull")
+    println(message: "GitLabCICD Log runUITests connectedAndroidTest succesfull")
+  end
+
+  # Support functions for :prepareForReleaseBuild lane
+  def ensureFixVersionExistsInJIRA(app_version)
+    JiraFixVersionCreator.new.main(["--fix-version", app_version, "--component", "Android"])
+  end
+
+  def getJIRAReleaseTicketNumber(app_version)
+    # Ensure that the JIRA release ticket actually exists
+    #  JiraReleaseTicketCreator.new.main(["--fix-version", app_version, "--component", "Android"])
+  end
+
+  def ensureReleaseBranchExists(app_version)
+    ReleaseBranchCreator.new.main(["--version-number", app_version])
+  end
+
+  def notifyTeamThatReleaseBranchWasCreated(app_version)
+    #ENV("SLACK_URL") must exist
+    release_channel = ENV["MOBILE_RELEASE_SLACK_CHANNEL"]
+    slack(
+      message: "Release branch created. Make a pull request: https://bitbucket.schoologize.com/projects/MOB/repos/android/pull-requests?create&targetBranch=refs%2Fheads%2Fmaster&sourceBranch=refs%2Fheads%2Frelease%2F#{app_version}&targetRepoId=104",
+      channel: release_channel)
+  end
+
+  def createIncrementedVersionNumbersBranch(release_ticket)
+   # IncrementedVersionNumbersBranchCreator.new.main(["--jira-ticket", release_ticket])
+  end
+
+  def applyFixVersionToTickets(app_version)
+    FixVersionApplier.new.main(["--fix-version", app_version, "--component", "Android"])
+  end
+
+  def notifyDevsAboutPotentiallyOrphanedTickets()
+    PathToProductionChecker.new.main(["--component", "Android"])
+  end
+
+  def sendUiTestFailureDataToAirTable()
+    UiTestResultPublisher.new.main(["--component", "android"])
+  end
+
+  desc "Organize JIRA and the repository in preparation for a new app release."
+  lane :prepareForReleaseBuild do
+    app_version = getCurrentVersionName()
+    begin
+      ensureFixVersionExistsInJIRA(app_version)
+      release_ticket = getJIRAReleaseTicketNumber(app_version)
+      ensureReleaseBranchExists(app_version)
+      notifyTeamThatReleaseBranchWasCreated(app_version)
+      createIncrementedVersionNumbersBranch(release_ticket)
+      applyFixVersionToTickets(app_version)
+      notifyDevsAboutPotentiallyOrphanedTickets()
+    rescue Exception => e
+      slack(
+        message: e.message,
+        success: false,
+        default_payloads: [:test_result]
+      )
+      raise
+    end
+  end
+
+
+  desc "Clean up Gradle processes"
+  lane :cleanUpGradle do
+    sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/cleanup_gradle_locks.sh"
+  end
+
+  desc "Increment minor version name and version code"
+  lane :increment_minor_version do
+    android_set_version_code(gradle_file: $gradleFile)
+    android_set_version_name(version_name: getIncrementMinorVersion(), gradle_file: $gradleFile)
+  end
+
+  after_all do |lane|
+    # This block is called, only if the executed lane was successful
+    # no-op
+  end
+
+  error do |lane, exception|
+    # no-op
+  end
+end
+
+# Load Version name from gradle properties
+def getCurrentVersionName()
+  android_get_version_name(gradle_file: $gradleFile)
+end
+
+def versionCode
+  android_get_version_code(gradle_file: $gradleFile)
+end
+
+def getIncrementMinorVersion()
+  year = Date.current.year
+  month = format('%02d', Date.current.month)
+
+  current_version_name = getCurrentVersionName()
+  current_version_name_year = current_version_name.split(".")[0]
+  current_version_name_month = current_version_name.split(".")[1]
+
+  if year == current_version_name_year.to_i and month == current_version_name_month
+  	current_version_name_count = current_version_name.split(".")[2]
+  	count = current_version_name_count.to_i + 1
+  else
+  	count = 1
+  end
+
+  return "#{year}.#{month}.#{count}"
+end
+
+# Gets the current branch name for RC Builds of the app
+def branchName
+  `git branch | grep "*"`.gsub('*', '').strip!
+end
+
+# More information about multiple platforms in fastlane: https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Platforms.md
+# All available actions: https://docs.fastlane.tools/actions
+
+# fastlane reports which actions are used. No personal data is recorded.
+# Learn more at https://github.com/fastlane/fastlane#metrics
