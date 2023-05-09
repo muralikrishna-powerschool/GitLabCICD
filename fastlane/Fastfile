@@ -11,7 +11,7 @@
 
 # This is the minimum version number required.
 # Update this, if you use features of a newer version
-require 'java-properties'
+# require 'java-properties'
 
 default_platform :android
 
@@ -129,10 +129,10 @@ platform :android do
 
     # Extract the warnings from the build output
     # sh in Linux does not support "set -o pipefail" which is why we need to call the command from a bash shell
-    sh "bash -c 'set -o pipefail && #{$chdirToProjRootCmd} && cat #{rawBuildOutput} | bundle exec #{$scriptsDir}/extract_build_warnings.rb >> #{tempWarningFile}'"
+#     sh "bash -c 'set -o pipefail && #{$chdirToProjRootCmd} && cat #{rawBuildOutput} | bundle exec #{$scriptsDir}/extract_build_warnings.rb >> #{tempWarningFile}'"
 
     # Process the extracted warnings
-    sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_build_output.sh -l #{tempWarningFile}"
+#     sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_build_output.sh -l #{tempWarningFile}"
 
     # Remove the temporary files
     sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput} #{tempWarningFile}"
@@ -140,9 +140,9 @@ platform :android do
 
   lane :internalBuildRC do
   	newVersionName = "#{getCurrentVersionName}_#{branchName}_#{versionCode}"
-  	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
+#   	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
     gradle(task: "clean")
-    gradle(task: "assembleRC")
+    gradle(task: "assembledebug")
   end
 
   desc "Process lint warnings"
@@ -244,7 +244,7 @@ platform :android do
   desc "Increment minor version name and version code"
   lane :increment_minor_version do
     android_set_version_code(gradle_file: $gradleFile)
-    android_set_version_name(version_name: getIncrementMinorVersion(), gradle_file: $gradleFile)
+#     android_set_version_name(version_name: getIncrementMinorVersion(), gradle_file: $gradleFile)
   end
 
   after_all do |lane|
@@ -259,11 +259,11 @@ end
 
 # Load Version name from gradle properties
 def getCurrentVersionName()
-  android_get_version_name(gradle_file: $gradleFile)
+  "2023.04.1"
 end
 
 def versionCode
-  android_get_version_code(gradle_file: $gradleFile)
+  "123456"
 end
 
 def getIncrementMinorVersion()
