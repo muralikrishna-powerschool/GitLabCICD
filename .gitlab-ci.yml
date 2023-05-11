@@ -1,3 +1,8 @@
+.macos_saas_runners:
+  tags:
+    - local-macos-intel-i7
+  image: macos-12.6.5
+
 stages:
   - buildRC
 
@@ -5,9 +10,9 @@ variables:
   LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
 
-before_script:
-  - gem install bundler
-  - bundle install
+# before_script:
+#   - gem install bundler
+#   - bundle install
 
 buildRC:
   dependencies: []
