@@ -135,7 +135,8 @@ platform :android do
 #     sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_build_output.sh -l #{tempWarningFile}"
 
     # Remove the temporary files
-    sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput} #{tempWarningFile}"
+#     sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput} #{tempWarningFile}"
+    sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput}"
   end
 
   lane :internalBuildRC do
