@@ -6,9 +6,8 @@ variables:
   LANG: "en_US.UTF-8"
 
 before_script:
-  - export ANDROID_HOME="/sdk"
-#  - gem install bundler
-#  - bundle install
+  - gem install bundler
+  - bundle install
 
 buildRC:
   dependencies: []
@@ -18,7 +17,6 @@ buildRC:
       - fastlane/screenshots
       - fastlane/logs
   script:
-    - chmod -R ../builds/7H5m5hwt/0/muralikrishna.gs/GitLabCICD/scripts/*
     - fastlane buildRC
   tags:
     - android
