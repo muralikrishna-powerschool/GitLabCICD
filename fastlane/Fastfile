@@ -11,12 +11,30 @@
 
 # This is the minimum version number required.
 # Update this, if you use features of a newer version
-# require 'java-properties'
+require 'java-properties'
+require_relative '../scripts/create_jira_fixversion'
+require_relative '../scripts/create_jira_release_ticket'
+require_relative '../scripts/release/create_release_branch'
+require_relative '../scripts/release/create_incremented_version_numbers_branch'
+require_relative '../scripts/apply_fix_version_to_tickets'
+require_relative '../scripts/jira_check_path_to_production_tickets'
+require_relative '../scripts/ui-tests/ui-test-result-publisher'
+
+fastlane_version "2.36.0"
 
 default_platform :android
 
 $chdirToProjRootCmd = "cd .."
+$scriptsDir = "./scripts"
 $gradleFile = "GitLabCICD/build.gradle"
+jsTestsDir = "./hybridJSTests"
+chdirToHybridJSTestDirCmd = "#{$chdirToProjRootCmd} && cd #{jsTestsDir}"
+
+#appcenter configs
+app_center_beta_app_name = "Schoology-3"
+app_center_enterprise_app_name = "Schoology-4"
+app_center_enterprise_destination_group = "Collaborators,External: Ceibal,External: VBCPS"
+app_center_owner_name = "Schoology"
 
 platform :android do
   before_all do
@@ -25,6 +43,96 @@ platform :android do
   desc "Runs all the local Unit Tests"
   lane :test do
     gradle(task: "clean")
+    gradle(task: "jacocoTestReport")
+  end
+
+  desc "Runs Connected Android UI Tests in GitLabCICD Module"
+  lane :androidTest do
+    gradle(task: "GitLabCICD:uninstallAll")
+    gradle(task: "clean")
+    gradle(task: "GitLabCICD:connectedAndroidTest")
+  end
+
+  desc "Runs Javascript Tests"
+  lane :javascriptTest do
+    sh "#{chdirToHybridJSTestDirCmd} && npm install && npm run test"
+  end
+
+  desc "Runs UiAutomator Course Discussion Tests"
+  lane :uiAutomatorCourseDiscussionTest do
+    println(message: "GitLabCICD Log started coursediscussiontests")
+    runUITests("coursestests.coursediscussiontests")
+  end
+
+  desc "Runs UiAutomator Course Assignment Tests"
+  lane :uiAutomatorCourseAssignmentTest do
+    println(message: "GitLabCICD Log started courseassignmenttests")
+    runUITests("coursestests.courseassignmenttests")
+  end
+
+  desc "Runs UiAutomator Other Course Material Tests"
+  lane :uiAutomatorOtherCourseMaterialTest do
+    println(message: "GitLabCICD Log started uiAutomatorOtherCourseMaterialTest")
+    runUITests("coursestests.othercoursematerialtests")
+  end
+
+  desc "Runs UiAutomator Unified Ui Tests"
+  lane :uiAutomatorUnifiedUiTest do
+    println(message: "GitLabCICD Log started uiAutomatorUnifiedUiTest")
+    runUITests("coursestests.unifiedui")
+  end
+
+  desc "Runs UiAutomator Grades And Groups Tests"
+  lane :uiAutomatorGradesAndGroupsTest do
+    println(message: "GitLabCICD Log started uiAutomatorGradesAndGroupsTest")
+    runUITests("gradesandgroupstests")
+  end
+
+  desc "Runs UiAutomator Login and Messages Tests"
+  lane :uiAutomatorLoginAndMessagesTest do
+    println(message: "GitLabCICD Log started uiAutomatorLoginAndMessagesTest")
+    runUITests("loginandmessagestests")
+  end
+
+  desc "Runs UiAutomator Update Tests"
+  lane :uiAutomatorUpdateTest do
+    println(message: "GitLabCICD Log started uiAutomatorUpdateTest")
+    runUITests("updatetests")
+  end
+
+  desc "Runs UiAutomator User Tests"
+  lane :uiAutomatorUserTest do
+    println(message: "GitLabCICD Log started uiAutomatorUserTest")
+    runUITests("usertests")
+  end
+
+
+  desc "Runs UiAutomator Deep Link Tests"
+  lane :uiAutomatorDeepLinkTest do
+    println(message: "GitLabCICD Log started uiAutomatorDeepLinkTest")
+    runUITests("deeplinktests")
+  end
+
+  desc "Send UI Test Failure data to AirTable"
+  lane :send_ui_test_results_to_airtable do
+    println(message: "Sending ui test failure data to AirTable")
+    sendUiTestFailureDataToAirTable()
+    println(message: "Finished sending ui test failure data to AirTable")
+  end
+
+  desc "Runs Connected Integration Tests"
+  lane :connectedIntegrationTests do
+    gradle(task: "GitLabCICD:uninstallAll")
+    println(message: "GitLabCICD Log Uninstall Succesful")
+    gradle(task: "clean")
+    println(message: "GitLabCICD Log Clean Succesful")
+    gradle(task: "GitLabCICD:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.package=com.murali.gitlabcicd.app.integrationTest",
+      flags: "--no-daemon",
+      properties:
+      {
+        "jvmargs" => "Xmx1024m"
+      })
+      println(message: "GitLabCICD Log UI Integration Successful Succesful")
   end
 
   desc "Generate release APKs and aab"
@@ -48,7 +156,7 @@ platform :android do
       path_to_aab = ""
       path_to_mapping = ""
       Dir.chdir("../") do
-        path_to_aab = "./Release/schoologyApp-release.aab"
+        path_to_aab = "./Release/GitLabCICD-release.aab"
         path_to_mapping = "./Release/mapping.txt"
       end
 
@@ -83,7 +191,7 @@ platform :android do
         api_token: ENV['APP_CENTER_APP_TOKEN'],
         owner_name: app_center_owner_name,
         app_name: app_center_beta_app_name,
-        apk: "Release/schoologyApp-release.apk",
+        apk: "Release/GitLabCICD-release.apk",
         mapping: "Release/mapping.txt",
         release_notes: ENV['APP_RELEASE_NOTES'],
         notify_testers: true
@@ -129,30 +237,29 @@ platform :android do
 
     # Extract the warnings from the build output
     # sh in Linux does not support "set -o pipefail" which is why we need to call the command from a bash shell
-#     sh "bash -c 'set -o pipefail && #{$chdirToProjRootCmd} && cat #{rawBuildOutput} | bundle exec #{$scriptsDir}/extract_build_warnings.rb >> #{tempWarningFile}'"
+    sh "bash -c 'set -o pipefail && #{$chdirToProjRootCmd} && cat #{rawBuildOutput} | bundle exec #{$scriptsDir}/extract_build_warnings.rb >> #{tempWarningFile}'"
 
     # Process the extracted warnings
-#     sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_build_output.sh -l #{tempWarningFile}"
+    sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_build_output.sh -l #{tempWarningFile}"
 
     # Remove the temporary files
-#     sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput} #{tempWarningFile}"
-    sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput}"
+    sh "#{$chdirToProjRootCmd} && rm #{rawBuildOutput} #{tempWarningFile}"
   end
 
   lane :internalBuildRC do
   	newVersionName = "#{getCurrentVersionName}_#{branchName}_#{versionCode}"
-#   	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
+  	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
     gradle(task: "clean")
-    gradle(task: "assembledebug")
+    gradle(task: "assembleRC")
   end
 
   desc "Process lint warnings"
   lane :lintRC do
-    println(message: "Schoology Log Lint Started")
+    println(message: "GitLabCICD Log Lint Started")
     gradle(task: "clean")
-    gradle(task: ":schoologyApp:lintRc")
+    gradle(task: ":GitLabCICD:lintRc")
     sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/process_lint_output.sh"
-    println(message: "Schoology Log Lint Succeded")
+    println(message: "GitLabCICD Log Lint Succeded")
   end
 
   desc "Deploy to app center"
@@ -174,6 +281,8 @@ platform :android do
     println(message: "GitLabCICD Log runUITests uninstallAll succesfull")
     gradle(task: "clean")
     println(message: "GitLabCICD Log runUITests clean succesfull")
+    gradle(task: "GitLabCICD:connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.package=com.murali.gitlabcicd.app.uiautomator.#{package_name}",
+          flags: "--no-daemon")
     println(message: "GitLabCICD Log runUITests connectedAndroidTest succesfull")
   end
 
@@ -242,10 +351,19 @@ platform :android do
     sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/cleanup_gradle_locks.sh"
   end
 
+  desc "Use WhiteSource to scan the project's 3rd party dependencies for security vulnerabilities and licence policy violations."
+  lane :whitesource_scan do
+    UI.user_error! "Environment variable 'WHITESOURCE_AGENT_JAR_PATH' MUST be set!" unless ENV['WHITESOURCE_AGENT_JAR_PATH']
+    UI.user_error! "Environment variable 'WHITESOURCE_API_KEY' MUST be set!" unless ENV['WHITESOURCE_API_KEY']
+
+    # TODO: Parameterize the product/project tokens via ENV params so that we can use a WhiteSource sandbox on feature branches
+    sh "cd .. && java -jar #{ENV['WHITESOURCE_AGENT_JAR_PATH']} -apiKey #{ENV['WHITESOURCE_API_KEY']} #{('-generateScanReport true -userKey ' + ENV['WHITESOURCE_USER_KEY']) if ENV['WHITESOURCE_USER_KEY']}"
+  end
+
   desc "Increment minor version name and version code"
   lane :increment_minor_version do
     android_set_version_code(gradle_file: $gradleFile)
-#     android_set_version_name(version_name: getIncrementMinorVersion(), gradle_file: $gradleFile)
+    android_set_version_name(version_name: getIncrementMinorVersion(), gradle_file: $gradleFile)
   end
 
   after_all do |lane|

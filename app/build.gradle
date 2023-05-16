@@ -3,9 +3,30 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def runTasks = gradle.startParameter.taskNames
+// Gradle uses "assembleRelease, and Android Studio uses :schoologyApp:assembleRelease
+def isReleaseTask = 'assembleRelease' in runTasks || ':GitLabCICD:assembleRelease' in runTasks
+
 android {
     namespace 'com.murali.gitlabcicd'
     compileSdk 33
+
+    lintOptions {
+        // Disable MissingTranslations for Debug/RC builds.
+        if (!isReleaseTask) {
+            disable 'MissingTranslation'
+        }
+
+        //we use kotlin Parcelize which creates Parcel at compile time, so it's fine to disable
+        //ParcelCreator
+        //DuplicatePlatformClasses should be fixed by updating our dependencies
+        disable 'GradleDependency', 'ParcelCreator', 'DuplicatePlatformClasses', 'ObsoleteLintCustomCheck'
+        abortOnError isReleaseTask
+    }
+
+    dexOptions {
+        javaMaxHeapSize "8192m"
+    }
 
     defaultConfig {
         applicationId "com.murali.gitlabcicd"
@@ -20,12 +41,54 @@ android {
         }
     }
 
-    buildTypes {
+    signingConfigs {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            File propsFile = file('signing.properties')
+            if (propsFile.exists() && propsFile.canRead()) {
+                Properties props = new Properties()
+                props.load(new FileInputStream(propsFile))
+                storeFile = file('SchoologyAppAndroid.keystore')
+                storePassword = props['STORE_PASSWORD']
+                keyAlias = props['KEY_ALIAS']
+                keyPassword = props['KEY_PASSWORD']
+            }
         }
     }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles 'proguard-project.txt'
+            signingConfig signingConfigs.release
+        }
+
+        rc { // release candidate build (for testing)
+            minifyEnabled true
+            proguardFiles 'proguard-debug-project.txt'
+            signingConfig signingConfigs.release
+            matchingFallbacks = ['debug', 'release']
+        }
+
+        debug {
+            minifyEnabled false
+            proguardFile 'proguard-debug-project.txt'
+            testProguardFiles 'proguard-debug-project.txt'
+            testCoverageEnabled true
+        }
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.returnDefaultValues = true
+        unitTests.all {
+            reports {
+                html.enabled = true
+                junitXml.setDestination(file("$buildDir/test-results/debug/"))
+                html.setDestination(file("$buildDir/reports/tests"))
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -42,6 +105,8 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            exclude 'META-INF/DEPENDENCIES'
+            exclude "org/codehaus/jackson/impl/VERSION.txt"
         }
     }
 }
