@@ -11,14 +11,14 @@
 
 # This is the minimum version number required.
 # Update this, if you use features of a newer version
-# require 'java-properties'
-# require_relative '../scripts/create_jira_fixversion'
-# require_relative '../scripts/create_jira_release_ticket'
-# require_relative '../scripts/release/create_release_branch'
-# require_relative '../scripts/release/create_incremented_version_numbers_branch'
-# require_relative '../scripts/apply_fix_version_to_tickets'
-# require_relative '../scripts/jira_check_path_to_production_tickets'
-# require_relative '../scripts/ui-tests/ui-test-result-publisher'
+require 'java-properties'
+require_relative '../scripts/create_jira_fixversion'
+require_relative '../scripts/create_jira_release_ticket'
+require_relative '../scripts/release/create_release_branch'
+require_relative '../scripts/release/create_incremented_version_numbers_branch'
+require_relative '../scripts/apply_fix_version_to_tickets'
+require_relative '../scripts/jira_check_path_to_production_tickets'
+require_relative '../scripts/ui-tests/ui-test-result-publisher'
 
 fastlane_version "2.36.0"
 
