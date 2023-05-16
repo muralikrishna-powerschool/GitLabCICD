@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'slop'
+require_relative 'slop'
 
 class ReleaseBranchCreator
   # See 'slop' help section below for script description and expectations
