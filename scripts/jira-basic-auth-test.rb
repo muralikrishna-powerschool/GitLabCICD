@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
-fastlane_require 'rubygems'
-fastlane_require 'pp'
-fastlane_require 'jira-ruby'
-fastlane_require 'pry'
+require 'rubygems'
+require 'pp'
+require 'jira-ruby'
+require 'pry'
 require_relative 'credentials'
 
 

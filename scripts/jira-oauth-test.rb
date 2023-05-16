@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-fastlane_require 'pp'
-fastlane_require 'jira-ruby'
+require 'pp'
+require 'jira-ruby'
 require_relative 'credentials'
 
 CONSUMER_KEY = 'db7bced9a3e9ade98baf8361b02edb30'

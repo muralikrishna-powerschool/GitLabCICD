@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-fastlane_require 'slop'
+require 'slop'
 
 # See 'slop' --help output below for script description
 # Use 'slop' for enhanced script argument parsing

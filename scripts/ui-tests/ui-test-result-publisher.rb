@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
-fastlane_require 'rexml/document'
-fastlane_require 'json'
-fastlane_require 'net/http'
-fastlane_require 'uri'
+require 'rexml/document'
+require 'json'
+require 'net/http'
+require 'uri'
 
 include REXML
 

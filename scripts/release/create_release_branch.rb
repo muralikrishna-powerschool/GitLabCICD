@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-fastlane_require 'slop'
+require 'slop'
 
 class ReleaseBranchCreator
   # See 'slop' help section below for script description and expectations
