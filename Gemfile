@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem 'fastlane', '2.162.0'
+gem 'fastlane', '2.212.2'
 gem 'java-properties', '0.0.2'
 gem 'jira-ruby', '2.2.0'
 gem 'slop', '4.8.2'

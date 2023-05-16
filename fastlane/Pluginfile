@@ -2,5 +2,5 @@
 #
 # Ensure this file is checked in to source control!
 
-gem 'fastlane-plugin-appcenter', '1.8.1'
+gem 'fastlane-plugin-appcenter', '2.1.0'
 gem 'fastlane-plugin-versioning_android', '0.1.0'
