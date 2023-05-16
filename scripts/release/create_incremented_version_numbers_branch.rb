@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'slop'
+fastlane_require 'slop'
 
 class IncrementedVersionNumbersBranchCreator
   # Use 'slop' for enhanced script arguments parsing

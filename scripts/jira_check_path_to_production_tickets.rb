@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
-require 'slop'
-require 'jira-ruby'
-require 'cgi'
+fastlane_require 'slop'
+fastlane_require 'jira-ruby'
+fastlane_require 'cgi'
 require_relative 'credentials'
 
 class PathToProductionChecker

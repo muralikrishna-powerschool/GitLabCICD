@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-require 'slop'
-require 'jira-ruby'
+fastlane_require 'slop'
+fastlane_require 'jira-ruby'
 require_relative 'credentials'
 
 class JiraReleaseTicketCreator
