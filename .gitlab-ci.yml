@@ -6,6 +6,7 @@ variables:
   LANG: "en_US.UTF-8"
 
 before_script:
+  - source ~/.bashrc
   - gem install bundler --user-install
   - bundle install
 
