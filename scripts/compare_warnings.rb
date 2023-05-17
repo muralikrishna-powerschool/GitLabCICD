@@ -17,12 +17,12 @@
 # STEP 1 - Make sure files exist
 ################################
 knownWarningsFilePath = (ARGV.count > 0) ? ARGV[0] : "./known_warnings.txt"
-if not File.exists?(knownWarningsFilePath)
+if not File.exist?(knownWarningsFilePath)
 	puts "ERROR: #{knownWarningsFilePath} not found!"
 	exit(1)
 end
 currentWarningsFilePath = (ARGV.count > 1) ? ARGV[1] : "./current_warnings.txt"
-if not File.exists?(currentWarningsFilePath)
+if not File.exist?(currentWarningsFilePath)
 	puts "ERROR: #{currentWarningsFilePath} not found!"
 	exit(1)
 end

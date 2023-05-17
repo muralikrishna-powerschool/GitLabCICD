@@ -26,7 +26,7 @@ default_platform :android
 
 $chdirToProjRootCmd = "cd .."
 $scriptsDir = "./scripts"
-$gradleFile = "GitLabCICD/build.gradle"
+$gradleFile = "./app/build.gradle"
 jsTestsDir = "./hybridJSTests"
 chdirToHybridJSTestDirCmd = "#{$chdirToProjRootCmd} && cd #{jsTestsDir}"
 
@@ -134,6 +134,11 @@ platform :android do
       })
       println(message: "GitLabCICD Log UI Integration Successful Succesful")
   end
+
+  desc "Generate debug APKs and aab"
+    lane :generateDebugBuilds do
+      sh "#{$chdirToProjRootCmd} && #{$scriptsDir}/buildDebug.sh"
+    end
 
   desc "Generate release APKs and aab"
   lane :generateReleaseBuilds do
@@ -250,7 +255,7 @@ platform :android do
   	newVersionName = "#{getCurrentVersionName}_#{branchName}_#{versionCode}"
   	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
     gradle(task: "clean")
-    gradle(task: "assembleRC")
+    gradle(task: "assembleDebug")
   end
 
   desc "Process lint warnings"

@@ -1,5 +1,6 @@
 stages:
   - build
+  - generateAPK
 
 variables:
   LANG: "en_US.UTF-8"
@@ -17,5 +18,16 @@ build:
       - fastlane/logs
   script:
     - bundle exec fastlane buildRC
+  tags:
+    - android
+
+generateAPK:
+  stage: generateAPK
+  artifacts:
+    paths:
+      - fastlane/screenshots
+      - fastlane/logs
+  script:
+    - bundle exec fastlane generateReleaseBuilds
   tags:
     - android

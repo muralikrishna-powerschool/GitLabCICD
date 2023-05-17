@@ -32,7 +32,7 @@ $lang_codes = $lang_maps.keys
 $file_paths_map = $lang_codes.map {|code|[code, "release_notes/#{$opts[:version_number]}/release_notes_#{code}.txt"]}.to_h
 
 def check_that_the_release_notes_files_exist()
-  if $file_paths_map.values.map {|fp| File.exists?(fp) }.include?(false) then
+  if $file_paths_map.values.map {|fp| File.exist?(fp) }.include?(false) then
     puts "ERROR: 1 or more of the release notes files was not found!"
     exit(1)
   end

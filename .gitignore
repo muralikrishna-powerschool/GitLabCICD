@@ -29,6 +29,7 @@ Thumbs.db
 build
 *.iml
 GitLabCICD/outputs
+GitLabCICD/app/build
 
 # fastlane specific
 fastlane/report.xml
