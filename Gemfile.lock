@@ -1,5 +1,5 @@
 GEM
-  remote: https://rubygems.org/
+  remote: http://rubygems.org/
   specs:
     CFPropertyList (3.0.6)
       rexml
@@ -162,7 +162,7 @@ GEM
     i18n (1.13.0)
       concurrent-ruby (~> 1.0)
     java-properties (0.0.2)
-    jira-ruby (2.2.0)
+    jira-ruby (2.3.0)
       activesupport
       atlassian-jwt
       multipart-post
@@ -246,7 +246,7 @@ DEPENDENCIES
   fastlane-plugin-appcenter (= 2.1.0)
   fastlane-plugin-versioning_android (= 0.1.0)
   java-properties (= 0.0.2)
-  jira-ruby (= 2.2.0)
+  jira-ruby (= 2.3.0)
   slop (= 4.8.2)
 
 BUNDLED WITH

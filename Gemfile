@@ -1,4 +1,4 @@
-source "https://rubygems.org"
+source "http://rubygems.org"
 
 gem 'fastlane', '2.212.2'
 gem 'java-properties', '0.0.2'
