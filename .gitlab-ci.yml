@@ -1,15 +1,14 @@
 stages:
-  - buildRC
+  - build
 
 variables:
-  LC_ALL: "en_US.UTF-8"
   LANG: "en_US.UTF-8"
 
 before_script:
   - gem install bundler --user-install
   - bundle install
 
-buildRC:
+build:
   dependencies: []
   stage: buildRC
   artifacts:
@@ -17,6 +16,6 @@ buildRC:
       - fastlane/screenshots
       - fastlane/logs
   script:
-    - fastlane buildRC
+    - bundle exec fastlane buildRC
   tags:
     - android
