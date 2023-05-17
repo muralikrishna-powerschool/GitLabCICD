@@ -1,5 +1,5 @@
 stages:
-  - build
+  - buildRC
   - generateAPK
 
 variables:
@@ -21,7 +21,7 @@ build:
   tags:
     - android
 
-generateAPK:
+assembleDebug:
   stage: generateAPK
   artifacts:
     paths:
