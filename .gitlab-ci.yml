@@ -22,7 +22,7 @@ build:
     - android
 
 generateAPK:
-  stage: generateDebugBuilds
+  stage: generateAPK
   artifacts:
     paths:
       - fastlane/screenshots
