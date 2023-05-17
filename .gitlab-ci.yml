@@ -22,12 +22,12 @@ build:
     - android
 
 generateAPK:
-  stage: generateAPK
+  stage: generateDebugBuilds
   artifacts:
     paths:
       - fastlane/screenshots
       - fastlane/logs
   script:
-    - bundle exec fastlane generateReleaseBuilds
+    - bundle exec fastlane generateDebugBuilds
   tags:
     - android
