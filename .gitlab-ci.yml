@@ -6,7 +6,7 @@ variables:
   LANG: "en_US.UTF-8"
 
 before_script:
-  - gem update --system
+  - gem update --system --user-install
   - gem install bundler --user-install
   - bundle install
 
