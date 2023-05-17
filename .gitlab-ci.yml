@@ -5,9 +5,9 @@ stages:
 variables:
   LANG: "en_US.UTF-8"
 
-before_script:
-  - gem install bundler --user-install
-  - bundle install
+#before_script:
+#  - gem install bundler --user-install
+#  - bundle install
 
 build:
   dependencies: []
