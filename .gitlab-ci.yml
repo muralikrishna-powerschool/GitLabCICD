@@ -7,7 +7,7 @@ variables:
 
 before_script:
   - gem install bundler --user-install
-  - bundle install --user-install
+  - bundle install
 
 buildRC:
   dependencies: []
