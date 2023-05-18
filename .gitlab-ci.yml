@@ -1,6 +1,7 @@
 stages:
   - buildRC
   - generateAPK
+  - generateSignedAPK
 
 variables:
   LANG: "en_US.UTF-8"
@@ -13,10 +14,7 @@ before_script:
 build:
   dependencies: []
   stage: buildRC
-  artifacts:
-    paths:
-      - fastlane/screenshots
-      - fastlane/logs
+  before_script: echo "STORE_PASSWORD='$storePassword' KEY_ALIAS='$keyAlias' KEY_PASSWORD='$keyPassword'" > app/signing.properties
   script:
     - bundle exec fastlane buildRC
   tags:
@@ -24,11 +22,14 @@ build:
 
 assembleDebug:
   stage: generateAPK
-  artifacts:
-    paths:
-      - fastlane/screenshots
-      - fastlane/logs
   script:
     - bundle exec fastlane generateDebugBuilds
+  tags:
+    - android
+
+assembleRelease:
+  stage: generateSignedAPK
+  script:
+    - bundle exec fastlane generateReleaseBuilds
   tags:
     - android

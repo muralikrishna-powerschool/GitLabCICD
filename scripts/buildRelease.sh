@@ -14,6 +14,6 @@ set -e
 # Copy Release Data into Release Folder
 rm -rf ./Release
 mkdir Release
-find ./schoologyApp/build/outputs/bundle/release -type f -name "schoologyApp*release.aab" -exec cp {} ./Release \;
-find ./schoologyApp/build/outputs/apk -type f -name "schoologyApp*release.apk" -exec cp {} ./Release \;
-cp ./schoologyApp/build/outputs/mapping/release/mapping.txt ./Release/mapping.txt
+find ./app/build/outputs/bundle/release -type f -name "app-release.aab" -exec cp {} ./Release \;
+find ./app/build/outputs/apk -type f -name "app-release.apk" -exec cp {} ./Release \;
+cp ./app/build/outputs/mapping/release/mapping.txt ./Release/mapping.txt
