@@ -2,7 +2,6 @@ stages:
   - buildRC
   - generateAPK
   - generateSignedAPK
-  - pushAppCenter
 
 variables:
   LANG: "en_US.UTF-8"
@@ -32,12 +31,6 @@ assembleRelease:
   stage: generateSignedAPK
   script:
     - bundle exec fastlane generateReleaseBuilds
-  tags:
-    - android
-
-pushToAppCenter:
-  stage: pushAppCenter
-  script:
     - bundle exec fastlane appCenterInternal
   tags:
     - android
