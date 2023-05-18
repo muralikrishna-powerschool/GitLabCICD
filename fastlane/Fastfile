@@ -31,10 +31,10 @@ jsTestsDir = "./hybridJSTests"
 chdirToHybridJSTestDirCmd = "#{$chdirToProjRootCmd} && cd #{jsTestsDir}"
 
 #appcenter configs
-app_center_beta_app_name = "Schoology-3"
+app_center_beta_app_name = "GitLabCICD"
 app_center_enterprise_app_name = "Schoology-4"
 app_center_enterprise_destination_group = "Collaborators,External: Ceibal,External: VBCPS"
-app_center_owner_name = "Schoology"
+app_center_owner_name = "MuralikrishnaGS"
 
 platform :android do
   before_all do
@@ -161,7 +161,7 @@ platform :android do
       path_to_aab = ""
       path_to_mapping = ""
       Dir.chdir("../") do
-        path_to_aab = "./Release/GitLabCICD-release.aab"
+        path_to_aab = "./Release/app-release.aab"
         path_to_mapping = "./Release/mapping.txt"
       end
 
@@ -196,7 +196,7 @@ platform :android do
         api_token: ENV['APP_CENTER_APP_TOKEN'],
         owner_name: app_center_owner_name,
         app_name: app_center_beta_app_name,
-        apk: "Release/GitLabCICD-release.apk",
+        apk: "Release/app-release.apk",
         mapping: "Release/mapping.txt",
         release_notes: ENV['APP_RELEASE_NOTES'],
         notify_testers: true
@@ -216,7 +216,7 @@ platform :android do
         api_token: ENV['APP_CENTER_ENTERPRISE_API_TOKEN'],
         owner_name: app_center_owner_name,
         app_name: app_center_enterprise_app_name,
-        apk: "Release/GitLabCICD-release.apk",
+        apk: "Release/app-release.apk",
         mapping: "Release/mapping.txt",
         version: versionName,
         build_number: versionCode,
@@ -255,7 +255,7 @@ platform :android do
   	newVersionName = "#{getCurrentVersionName}_#{branchName}_#{versionCode}"
   	android_set_version_name(version_name: newVersionName, gradle_file: $gradleFile)
     gradle(task: "clean")
-    gradle(task: "assembleDebug")
+    gradle(task: "assembleRC")
   end
 
   desc "Process lint warnings"
