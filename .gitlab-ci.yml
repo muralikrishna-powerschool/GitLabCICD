@@ -11,10 +11,14 @@ before_script:
   - gem install bundler --user-install
   - bundle install
 
+  STORE_PASSWORD=44Dogwood
+  KEY_ALIAS=schoologyandroidkey
+  KEY_PASSWORD=44Dogwood
+
 build:
   dependencies: []
   stage: buildRC
-  before_script: echo "STORE_PASSWORD='$STORE_PASSWORD'\nKEY_ALIAS='$KEY_ALIAS'\nKEY_PASSWORD='$KEY_PASSWORD'" > app/signing.properties
+  before_script: echo "STORE_PASSWORD=$STORE_PASSWORD\nKEY_ALIAS=$KEY_ALIAS\nKEY_PASSWORD=$KEY_PASSWORD" > app/signing.properties
   script:
     - bundle exec fastlane buildRC
   tags:
