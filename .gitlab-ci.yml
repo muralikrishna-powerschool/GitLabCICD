@@ -10,11 +10,11 @@ before_script:
   - source ~/.bashrc
   - gem install bundler --user-install
   - bundle install
+  - echo -e "STORE_PASSWORD=$STORE_PASSWORD\nKEY_ALIAS=$KEY_ALIAS\nKEY_PASSWORD=$KEY_PASSWORD" > app/signing.properties
 
 build:
   dependencies: []
   stage: buildRC
-  before_script: echo -e "STORE_PASSWORD=$STORE_PASSWORD\nKEY_ALIAS=$KEY_ALIAS\nKEY_PASSWORD=$KEY_PASSWORD" > app/signing.properties
   script:
     - bundle exec fastlane buildRC
   tags:
